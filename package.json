@@ -16,5 +16,7 @@
     "mongoose": "^7.6.3",
     "serverless-http": "^3.2.0"
   },
-  "type": "module"
+
+    "type": "module"
+  
 }
