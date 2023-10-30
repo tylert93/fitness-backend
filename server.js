@@ -1,15 +1,15 @@
-app.use('/users', userRouter)
-
 import "dotenv/config";
 import express, { response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import userRouter from './routes/api/users.js'
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/users', userRouter)
 
 mongoose.connect(process.env.DATABASE_URL);
 
