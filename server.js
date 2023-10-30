@@ -5,6 +5,9 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import userRouter from './routes/api/users.js'
 
+import { User } from "./models/user.js";
+import userRouter from "./routes/api/users.js"
+
 const app = express();
 
 app.use(cors());
@@ -14,8 +17,23 @@ app.use('/users', userRouter)
 mongoose.connect(process.env.DATABASE_URL);
 
 
+const port = process.env.PORT || 4000;
+
+app.listen(port, () => {
+    console.log(`listening on port: ${port}`);
+  });
+
+app.get("/", async (req, res) => {
+  res.json({ message: "Hello!" });
+});
+
+
 // Define a schema for Foods
 const foodSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     name: String,
     description: String,
     calories: Number,
@@ -32,6 +50,10 @@ const Food = mongoose.model('Food', foodSchema);
 
 // Define a schema for Meals
 const mealSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     mealName: String,
     items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Food' }]
 });
@@ -41,7 +63,11 @@ const Meal = mongoose.model('Meal', mealSchema);
 // Routes for Foods
 app.get('/foods', async (req, res) => {
     try {
-        const foods = await Food.find();
+        const query = {};
+        if (req.query.userId) {
+            query.user = req.query.userId;
+        }
+        const foods = await Food.find(query);
         res.json(foods);
     } catch (err) {
         res.status(500).send(err.message);
@@ -50,7 +76,14 @@ app.get('/foods', async (req, res) => {
 
 app.post('/foods/new', async (req, res) => {
     try {
-        const food = new Food(req.body);
+        const user = await User.findById(req.body.userId);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        const food = new Food({
+            ...req.body,
+            user: user._id
+        });
         await food.save();
         res.json(food);
     } catch (err) {
@@ -79,7 +112,11 @@ app.delete('/foods/:id', async (req, res) => {
 // Routes for Meals
 app.get('/meals', async (req, res) => {
     try {
-        const meals = await Meal.find().populate('items');
+        const query = {};
+        if (req.query.userId) {
+            query.user = req.query.userId;
+        }
+        const meals = await Meal.find(query).populate('items');
         res.json(meals);
     } catch (err) {
         res.status(500).send(err.message);
@@ -88,7 +125,14 @@ app.get('/meals', async (req, res) => {
 
 app.post('/meals/new', async (req, res) => {
     try {
-        const meal = new Meal(req.body);
+        const user = await User.findById(req.body.userId);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        const meal = new Meal({
+            ...req.body,
+            user: user._id
+        });
         await meal.save();
         res.json(meal);
     } catch (err) {
@@ -142,20 +186,11 @@ const workoutSchema = new mongoose.Schema({
 
 const Workout = mongoose.model("workout", workoutSchema);
 
-const port = process.env.PORT || 4000;
-
 //WORKOUT ENDPOINTS---------------------------------------------------------
-
-app.listen(port, () => {
-    console.log(`listening on port: ${port}`);
-  });
-app.get("/", async (req, res) => {
-  res.json({ message: "Hello!" });
-});
 
 // add new workout
 
-app.post("/workout/new", async (req, res) => {
+app.post("/workouts/new", async (req, res) => {
   const findUserId = await User.findById(req.body.findUserId);
   const exercises = req.body.exercises.map((exerciseData) => ({
     exerciseName: exerciseData.exerciseName,
@@ -163,17 +198,25 @@ app.post("/workout/new", async (req, res) => {
     reps: exerciseData.reps,
     weight: exerciseData.weight,
   }));
-  const workoutRoutine = new Workout({
+
+  const workoutRoutineData = {
     user: findUserId,
     workoutName: req.body.workoutName,
     workoutDate: req.body.workoutDate,
     exercises,
-    cardio: {
+  };
+
+  if (req.body.cardio !== null) {
+    workoutRoutineData.cardio = {
       cardioType: req.body.cardio.cardioType,
       durationMinutes: req.body.cardio.durationMinutes,
       distance: req.body.cardio.distance,
-    },
-  });
+    };
+  }
+
+  const workoutRoutine = new Workout(workoutRoutineData);
+
+
   await workoutRoutine
     .save()
     .then(() => {
@@ -185,7 +228,7 @@ app.post("/workout/new", async (req, res) => {
 
 // delete workout
 
-app.delete("/workout/:id", async (req, res) => {
+app.delete("/workouts/:id", async (req, res) => {
   Workout.deleteOne({ _id: req.params.id })
     .then(() => {
       console.log("workout deleted");
@@ -196,7 +239,7 @@ app.delete("/workout/:id", async (req, res) => {
 
 // edit a workout
 
-app.put("/workout/:id", async (req, res) => {
+app.put("/workouts/:id", async (req, res) => {
     try {
       const workoutId = req.params.id;
       const updatedWorkoutData = req.body;
@@ -221,14 +264,14 @@ app.put("/workout/:id", async (req, res) => {
 
 // display all workouts
 
-app.get("/workout", async (req, res) => {
+app.get("/workouts", async (req, res) => {
   const workouts = await Workout.find({});
   res.json(workouts);
 });
 
 // display a single workout
 
-app.get("/workout/:id", async (req, res) => {
+app.get("/workouts/:id", async (req, res) => {
     try {
       const singleWorkout = await Workout.findById(req.params.id);
       if (!singleWorkout) {
