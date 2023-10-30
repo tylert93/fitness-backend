@@ -1,21 +1,26 @@
-app.use('/users', userRouter)
-
 import "dotenv/config";
 import express, { response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import { User } from "./models/user.js";
+import userRouter from "./routes/api/users.js"
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/users', userRouter)
 
 mongoose.connect(process.env.DATABASE_URL);
 
 
 // Define a schema for Foods
 const foodSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     name: String,
     description: String,
     calories: Number,
@@ -32,6 +37,10 @@ const Food = mongoose.model('Food', foodSchema);
 
 // Define a schema for Meals
 const mealSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     mealName: String,
     items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Food' }]
 });
@@ -41,7 +50,11 @@ const Meal = mongoose.model('Meal', mealSchema);
 // Routes for Foods
 app.get('/foods', async (req, res) => {
     try {
-        const foods = await Food.find();
+        const query = {};
+        if (req.query.userId) {
+            query.user = req.query.userId;
+        }
+        const foods = await Food.find(query);
         res.json(foods);
     } catch (err) {
         res.status(500).send(err.message);
@@ -50,7 +63,14 @@ app.get('/foods', async (req, res) => {
 
 app.post('/foods/new', async (req, res) => {
     try {
-        const food = new Food(req.body);
+        const user = await User.findById(req.body.userId);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        const food = new Food({
+            ...req.body,
+            user: user._id
+        });
         await food.save();
         res.json(food);
     } catch (err) {
@@ -79,7 +99,11 @@ app.delete('/foods/:id', async (req, res) => {
 // Routes for Meals
 app.get('/meals', async (req, res) => {
     try {
-        const meals = await Meal.find().populate('items');
+        const query = {};
+        if (req.query.userId) {
+            query.user = req.query.userId;
+        }
+        const meals = await Meal.find(query).populate('items');
         res.json(meals);
     } catch (err) {
         res.status(500).send(err.message);
@@ -88,7 +112,14 @@ app.get('/meals', async (req, res) => {
 
 app.post('/meals/new', async (req, res) => {
     try {
-        const meal = new Meal(req.body);
+        const user = await User.findById(req.body.userId);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        const meal = new Meal({
+            ...req.body,
+            user: user._id
+        });
         await meal.save();
         res.json(meal);
     } catch (err) {
