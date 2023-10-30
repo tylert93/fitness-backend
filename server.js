@@ -1,3 +1,5 @@
+app.use('/users', userRouter)
+
 import "dotenv/config";
 import express, { response } from "express";
 import cors from "cors";
