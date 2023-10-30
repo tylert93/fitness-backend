@@ -1,9 +1,9 @@
-
 import "dotenv/config";
 import express, { response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import userRouter from './routes/api/users.js'
 
 import { User } from "./models/user.js";
 import userRouter from "./routes/api/users.js"
