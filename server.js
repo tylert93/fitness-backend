@@ -1,8 +1,10 @@
+
 import "dotenv/config";
 import express, { response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+
 import { User } from "./models/user.js";
 import userRouter from "./routes/api/users.js"
 
@@ -13,6 +15,17 @@ app.use(bodyParser.json());
 app.use('/users', userRouter)
 
 mongoose.connect(process.env.DATABASE_URL);
+
+
+const port = process.env.PORT || 4000;
+
+app.listen(port, () => {
+    console.log(`listening on port: ${port}`);
+  });
+
+app.get("/", async (req, res) => {
+  res.json({ message: "Hello!" });
+});
 
 
 // Define a schema for Foods
@@ -173,20 +186,11 @@ const workoutSchema = new mongoose.Schema({
 
 const Workout = mongoose.model("workout", workoutSchema);
 
-const port = process.env.PORT || 4000;
-
 //WORKOUT ENDPOINTS---------------------------------------------------------
-
-app.listen(port, () => {
-    console.log(`listening on port: ${port}`);
-  });
-app.get("/", async (req, res) => {
-  res.json({ message: "Hello!" });
-});
 
 // add new workout
 
-app.post("/workout/new", async (req, res) => {
+app.post("/workouts/new", async (req, res) => {
   const findUserId = await User.findById(req.body.findUserId);
   const exercises = req.body.exercises.map((exerciseData) => ({
     exerciseName: exerciseData.exerciseName,
@@ -194,17 +198,25 @@ app.post("/workout/new", async (req, res) => {
     reps: exerciseData.reps,
     weight: exerciseData.weight,
   }));
-  const workoutRoutine = new Workout({
+
+  const workoutRoutineData = {
     user: findUserId,
     workoutName: req.body.workoutName,
     workoutDate: req.body.workoutDate,
     exercises,
-    cardio: {
+  };
+
+  if (req.body.cardio !== null) {
+    workoutRoutineData.cardio = {
       cardioType: req.body.cardio.cardioType,
       durationMinutes: req.body.cardio.durationMinutes,
       distance: req.body.cardio.distance,
-    },
-  });
+    };
+  }
+
+  const workoutRoutine = new Workout(workoutRoutineData);
+
+
   await workoutRoutine
     .save()
     .then(() => {
@@ -216,7 +228,7 @@ app.post("/workout/new", async (req, res) => {
 
 // delete workout
 
-app.delete("/workout/:id", async (req, res) => {
+app.delete("/workouts/:id", async (req, res) => {
   Workout.deleteOne({ _id: req.params.id })
     .then(() => {
       console.log("workout deleted");
@@ -227,7 +239,7 @@ app.delete("/workout/:id", async (req, res) => {
 
 // edit a workout
 
-app.put("/workout/:id", async (req, res) => {
+app.put("/workouts/:id", async (req, res) => {
     try {
       const workoutId = req.params.id;
       const updatedWorkoutData = req.body;
@@ -252,14 +264,14 @@ app.put("/workout/:id", async (req, res) => {
 
 // display all workouts
 
-app.get("/workout", async (req, res) => {
+app.get("/workouts", async (req, res) => {
   const workouts = await Workout.find({});
   res.json(workouts);
 });
 
 // display a single workout
 
-app.get("/workout/:id", async (req, res) => {
+app.get("/workouts/:id", async (req, res) => {
     try {
       const singleWorkout = await Workout.findById(req.params.id);
       if (!singleWorkout) {
