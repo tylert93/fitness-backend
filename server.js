@@ -1,16 +1,18 @@
-app.use('/users', userRouter)
 
 import "dotenv/config";
 import express, { response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import userRouter from "./routes/api/users.js"
+import { User } from "./models/user.js";
+
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-
+app.use('/users', userRouter)
 mongoose.connect(process.env.DATABASE_URL);
 
 
@@ -155,7 +157,7 @@ app.get("/", async (req, res) => {
 
 // add new workout
 
-app.post("/workout/new", async (req, res) => {
+app.post("/workouts/new", async (req, res) => {
   const findUserId = await User.findById(req.body.findUserId);
   const exercises = req.body.exercises.map((exerciseData) => ({
     exerciseName: exerciseData.exerciseName,
@@ -163,17 +165,25 @@ app.post("/workout/new", async (req, res) => {
     reps: exerciseData.reps,
     weight: exerciseData.weight,
   }));
-  const workoutRoutine = new Workout({
+
+  const workoutRoutineData = {
     user: findUserId,
     workoutName: req.body.workoutName,
     workoutDate: req.body.workoutDate,
     exercises,
-    cardio: {
+  };
+
+  if (req.body.cardio !== null) {
+    workoutRoutineData.cardio = {
       cardioType: req.body.cardio.cardioType,
       durationMinutes: req.body.cardio.durationMinutes,
       distance: req.body.cardio.distance,
-    },
-  });
+    };
+  }
+
+  const workoutRoutine = new Workout(workoutRoutineData);
+
+
   await workoutRoutine
     .save()
     .then(() => {
@@ -185,7 +195,7 @@ app.post("/workout/new", async (req, res) => {
 
 // delete workout
 
-app.delete("/workout/:id", async (req, res) => {
+app.delete("/workouts/:id", async (req, res) => {
   Workout.deleteOne({ _id: req.params.id })
     .then(() => {
       console.log("workout deleted");
@@ -196,7 +206,7 @@ app.delete("/workout/:id", async (req, res) => {
 
 // edit a workout
 
-app.put("/workout/:id", async (req, res) => {
+app.put("/workouts/:id", async (req, res) => {
     try {
       const workoutId = req.params.id;
       const updatedWorkoutData = req.body;
@@ -221,14 +231,14 @@ app.put("/workout/:id", async (req, res) => {
 
 // display all workouts
 
-app.get("/workout", async (req, res) => {
+app.get("/workouts", async (req, res) => {
   const workouts = await Workout.find({});
   res.json(workouts);
 });
 
 // display a single workout
 
-app.get("/workout/:id", async (req, res) => {
+app.get("/workouts/:id", async (req, res) => {
     try {
       const singleWorkout = await Workout.findById(req.params.id);
       if (!singleWorkout) {
