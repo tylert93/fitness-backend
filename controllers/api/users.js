@@ -27,11 +27,15 @@ export async function updateUser(req, res) {
 
 export async function displayUser(req, res) {
     try {
-        const user = await User.findById(req.params.id)
-        res.json(user)
-    } catch {
-        console.log('Error');
-        res.sendStatus(400)
+        const user = await User.findOne({ userEmail: req.params.email }); // Find user by email
+        console.log(req.params.email);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user); // Return user information if found
+    } catch (error) {
+        console.error(error);
+        res.sendStatus(500); // Send a server error response
     }
 }
 
