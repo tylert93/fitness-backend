@@ -5,7 +5,7 @@ const userRouter = express.Router()
 
 // User Endpoints
 
-userRouter.get('/:id', async (req,res) => displayUser(req,res))
+userRouter.get('/:email', async (req,res) => displayUser(req,res))
 
 userRouter.post('/new', async (req,res) => saveUser(req,res))
 
