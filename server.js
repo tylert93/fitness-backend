@@ -73,9 +73,9 @@ app.get('/foods', async (req, res) => {
     }
 });
 
-app.post('/foods/new', async (req, res) => {
+app.post('/foods/new/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.body.userId);
+        const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).send('User not found');
         }
@@ -157,6 +157,19 @@ app.delete('/meals/:id', async (req, res) => {
     }
 });
 
+app.get("/foods/:id", async (req, res) => {
+    try {
+      const singleFood = await Food.findById(req.params.id);
+      if (!singleFood) {
+        return res.status(404).json({ error: 'Food not found' });
+      }
+      console.log("Single Food");
+      res.json(singleFood);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
 //WORKOUT SCHEMA---------------------------------------------------------
 
