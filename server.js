@@ -191,7 +191,10 @@ const Workout = mongoose.model("workout", workoutSchema);
 // add new workout
 
 app.post("/workouts/new", async (req, res) => {
-  const findUserId = await User.findById(req.body.findUserId);
+  console.log("User ID to find:", req.body.findUserId);
+  // const findUserId = await User.findById(req.body.findUserId);
+  console.log("User ID found:", findUserId);
+
   const exercises = req.body.exercises.map((exerciseData) => ({
     exerciseName: exerciseData.exerciseName,
     sets: exerciseData.sets,

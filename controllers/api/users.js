@@ -9,9 +9,11 @@ export async function saveUser(req, res) {
         });
         newuser.save().then(() => {
           res.sendStatus(200);
+          console.log("user saved")
         });
     } else {
         res.sendStatus(500)
+        console.log("user not saved")
     }
 }
 
