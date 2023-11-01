@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import userRouter from './routes/api/users.js'
 import { User } from "./models/user.js";
+import calendarRouter from "./routes/api/calendar.js";
 
 
 const app = express();
@@ -12,6 +13,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/users', userRouter)
+app.use('/calendar', calendarRouter)
 
 mongoose.connect(process.env.DATABASE_URL);
 

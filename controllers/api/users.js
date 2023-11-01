@@ -18,7 +18,7 @@ export async function saveUser(req, res) {
 }
 
 export async function updateUser(req, res) {
-    await User.findByIdAndUpdate(req.params.id, { height: req.body.height, weight: parseFloat(req.body.weight), age: req.body.age, gender: req.body.gender})
+    await User.findByIdAndUpdate(req.params.id, { height: req.body.height, weight: parseFloat(req.body.weight), age: req.body.age, gender: req.body.gender, goalWeight: parseFloat(req.body.goalWeight)})
     .then(() => {
         res.sendStatus(200)
     })
@@ -38,6 +38,16 @@ export async function displayUser(req, res) {
     } catch (error) {
         console.error(error);
         res.sendStatus(500); // Send a server error response
+    }
+}
+
+export async function displayUserByID(req, res) {
+    try {
+        const user = await User.findById(req.params.id)
+        res.json(user)
+    } catch {
+        console.log('Error');
+        res.sendStatus(400)
     }
 }
 
