@@ -11,9 +11,10 @@ const userSchema = new mongoose.Schema({
     }, 
     height: Number,
     weight: Number,
+    goalWeight: Number,
     age: Number,
     gender: String
 
   });
 
-export const User = mongoose.model('user', userSchema)
+export const User = mongoose.model('User', userSchema)
