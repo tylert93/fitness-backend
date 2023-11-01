@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import userRouter from './routes/api/users.js'
 import { User } from "./models/user.js";
+import calendarRouter from "./routes/api/calendar.js";
 
 
 const app = express();
@@ -12,6 +13,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/users', userRouter)
+app.use('/calendar', calendarRouter)
 
 mongoose.connect(process.env.DATABASE_URL);
 
@@ -196,17 +198,21 @@ const workoutSchema = new mongoose.Schema({
   // Other workout-related attributes if needed
 });
 
-const Workout = mongoose.model("workout", workoutSchema);
+const Workout = mongoose.model("Workout", workoutSchema);
 
 //WORKOUT ENDPOINTS---------------------------------------------------------
 
 // add new workout
 
-app.post("/workouts/new", async (req, res) => {
-  console.log("User ID to find:", req.body.findUserId);
-  // const findUserId = await User.findById(req.body.findUserId);
-  console.log("User ID found:", findUserId);
-
+app.post("/workouts/new/:id", async (req, res) => {
+  // console.log("User ID to find:", req.headers);
+  const userId = req.params.id;
+  console.log(req.params.id)
+  const findUserId = await User.findById(userId);
+  console.log(findUserId)
+  
+  // const { userid } = req.headers
+  console.log("User ID found:", userId);
   const exercises = req.body.exercises.map((exerciseData) => ({
     exerciseName: exerciseData.exerciseName,
     sets: exerciseData.sets,
@@ -215,7 +221,7 @@ app.post("/workouts/new", async (req, res) => {
   }));
 
   const workoutRoutineData = {
-    user: findUserId,
+    user: userId,
     workoutName: req.body.workoutName,
     workoutDate: req.body.workoutDate,
     exercises,
@@ -257,18 +263,19 @@ app.delete("/workouts/:id", async (req, res) => {
 app.put("/workouts/:id", async (req, res) => {
     try {
       const workoutId = req.params.id;
+      console.log("edit workout", workoutId)
       const updatedWorkoutData = req.body;
   
       const singleWorkout = await Workout.findById(workoutId);
   
       if (!singleWorkout) {
-        return res.status(404).json({ error: 'Workout not found' });
+        return res.status(404).json({ error: 'Edit: Workout not found' });
       }
   
       singleWorkout.set(updatedWorkoutData);
       await singleWorkout.save();
   
-      console.log("Workout updated");
+      console.log("Edit: Workout updated");
       res.status(202).json(singleWorkout);
     } catch (error) {
       console.error(error);
@@ -280,7 +287,14 @@ app.put("/workouts/:id", async (req, res) => {
 // display all workouts
 
 app.get("/workouts", async (req, res) => {
-  const workouts = await Workout.find({});
+  const { userid } = req.headers
+  // console.log(userid)
+  // Convert the userId to a MongoDB ObjectId
+  const userObjectId = new mongoose.Types.ObjectId(userid);
+
+  // Use the userObjectId to filter workouts by user
+  const workouts = await Workout.find({ user: userObjectId });
+  
   res.json(workouts);
 });
 
