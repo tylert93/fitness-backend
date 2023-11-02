@@ -35,6 +35,11 @@ const foodSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+
+    date: {
+      type: Date,
+      default: Date.now
+  },
     name: String,
     description: String,
     calories: Number,
@@ -45,6 +50,7 @@ const foodSchema = new mongoose.Schema({
     fats: Number,
     fiber: Number,
     sugar: Number
+    
 });
 
 const Food = mongoose.model('Food', foodSchema);
@@ -63,43 +69,60 @@ const Meal = mongoose.model('Meal', mealSchema);
 
 // Routes for Foods
 app.get('/foods', async (req, res) => {
-    try {
-        const query = {};
-        if (req.query.userId) {
-            query.user = req.query.userId;
-        }
-        const foods = await Food.find(query);
-        res.json(foods);
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+  try {
+      const query = {};
+      if (req.query.userId) {
+          query.user = req.query.userId;
+      }
+      if (req.query.date) {
+        const date = new Date(req.query.date);
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+    
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+    
+        query.date = { $gte: startOfDay, $lte: endOfDay };
+    }    
+      const foods = await Food.find(query);
+      res.json(foods);
+  } catch (err) {
+      res.status(500).send(err.message);
+  }
 });
 
-app.post('/foods/new', async (req, res) => {
-    try {
-        const user = await User.findById(req.body.userId);
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
-        const food = new Food({
-            ...req.body,
-            user: user._id
-        });
-        await food.save();
-        res.json(food);
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+
+app.post('/foods/new/:id', async (req, res) => {
+  try {
+      const user = await User.findById(req.params.id);
+      if (!user) {
+          return res.status(404).send('User not found');
+      }
+      const food = new Food({
+          ...req.body,
+          user: user._id,
+          date: new Date() // Explicitly set to the current date-time
+      });
+      await food.save();
+      res.json(food);
+  } catch (err) {
+      res.status(500).send(err.message);
+  }
 });
+
 
 app.put('/foods/:id', async (req, res) => {
-    try {
-        const food = await Food.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(food);
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+  try {
+      const updateData = { ...req.body };
+      delete updateData.date;  // Prevent date from being updated
+
+      const food = await Food.findByIdAndUpdate(req.params.id, updateData, { new: true });
+      res.json(food);
+  } catch (err) {
+      res.status(500).send(err.message);
+  }
 });
+
 
 app.delete('/foods/:id', async (req, res) => {
     try {
@@ -159,6 +182,19 @@ app.delete('/meals/:id', async (req, res) => {
     }
 });
 
+app.get("/foods/:id", async (req, res) => {
+    try {
+      const singleFood = await Food.findById(req.params.id);
+      if (!singleFood) {
+        return res.status(404).json({ error: 'Food not found' });
+      }
+      console.log("Single Food");
+      res.json(singleFood);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
 //WORKOUT SCHEMA---------------------------------------------------------
 
