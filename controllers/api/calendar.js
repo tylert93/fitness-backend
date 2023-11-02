@@ -13,6 +13,18 @@ export async function displayCalendar( req, res ) {
     }
 }
 
+export async function displayMostRecentWeight (req, res) {
+    try {
+        const mostRecentWeight = await Calendar.findOne({"userId": req.params.id })
+      .sort({ date: -1 }) // Sort by date in descending order to get the latest date first
+      .select('weight date'); // Select only the weight field
+        res.json(mostRecentWeight)
+    }   catch {
+        console.log("Error");
+        res.sendStaus(400)
+    }
+}
+
 export async function saveCalendar (req, res) {
     const user = await User.findById(req.body.userId)
     const calendar = new Calendar ({

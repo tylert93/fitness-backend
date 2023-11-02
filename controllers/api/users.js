@@ -18,7 +18,7 @@ export async function saveUser(req, res) {
 }
 
 export async function updateUser(req, res) {
-    await User.findByIdAndUpdate(req.params.id, { height: req.body.height, weight: parseFloat(req.body.weight), age: req.body.age, gender: req.body.gender, goalWeight: parseFloat(req.body.goalWeight)})
+    await User.findByIdAndUpdate(req.params.id, { height: req.body.height, weight: parseFloat(req.body.weight), age: req.body.age, gender: req.body.gender, goalWeight: parseFloat(req.body.goalWeight), goalCalories: parseFloat(req.body.goalCalories)})
     .then(() => {
         res.sendStatus(200)
     })
