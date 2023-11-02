@@ -299,7 +299,7 @@ app.put("/workouts/:id", async (req, res) => {
       await singleWorkout.save();
   
       console.log("Edit: Workout updated");
-      res.status(202).json(singleWorkout);
+      res.status(200).json(singleWorkout);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: error.message });
