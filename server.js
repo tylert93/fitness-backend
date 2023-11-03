@@ -91,6 +91,25 @@ app.get('/foods', async (req, res) => {
   }
 });
 
+app.get('/calories/total/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const date = new Date();
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const foods = await Food.find({ user: userId, date: { $gte: startOfDay, $lte: endOfDay } });
+
+    const totalCalories = foods.reduce((total, food) => total + food.calories, 0);
+
+    res.json({ totalCalories });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
 
 app.post('/foods/new/:id', async (req, res) => {
   try {
