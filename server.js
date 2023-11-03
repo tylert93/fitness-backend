@@ -102,7 +102,7 @@ app.get('/calories/total/:id', async (req, res) => {
     endOfDay.setHours(23, 59, 59, 999);
 
     const foods = await Food.find({ user: userId, date: { $gte: startOfDay, $lte: endOfDay } });
-    
+
     const totalCalories = foods.reduce((total, food) => total + food.calories, 0);
 
     res.json({ totalCalories });
@@ -110,8 +110,6 @@ app.get('/calories/total/:id', async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-
-
 
 app.post('/foods/new/:id', async (req, res) => {
   try {

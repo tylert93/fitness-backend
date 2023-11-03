@@ -38,3 +38,26 @@ export async function saveCalendar (req, res) {
     })
     .catch(error => console.error(error))
 }
+
+export async function updateCalendar(req, res) {
+    try {
+        const updatedWeight = await Calendar.findByIdAndUpdate(req.params.id, 
+            { weight: req.body.weight },
+            { new: true }
+        );
+        res.json(updatedWeight);
+    } catch (error) {
+        console.error("Error updating weight:", error);
+        res.sendStatus(400);
+    }
+}
+
+export async function deleteCalendar(req, res) {
+    try {
+        await Calendar.findByIdAndRemove(req.params.id);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error("Error deleting weight:", error);
+        res.sendStatus(400);
+    }
+}
